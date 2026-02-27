@@ -1,5 +1,5 @@
 import { BonusTransaction } from '../models/BonusTransaction';
-import { sequelize } from '../instances/sequelize';
+import { sequelize } from '../db';
 import { Transaction, Op } from 'sequelize';
 
 export class AppError extends Error {
