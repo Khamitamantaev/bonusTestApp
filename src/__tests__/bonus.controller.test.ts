@@ -1,8 +1,8 @@
-const request = require('supertest');
-const app = require('../app'); // ваш express app
-const { sequelize } = require('../models');
-const { BonusTransaction } = require('../models/BonusTransaction');
-const { User } = require('../models/User');
+import request from 'supertest';
+import app from '../app';
+import { sequelize } from '../db';
+import { BonusTransaction } from '../models/BonusTransaction';
+import { User } from '../models/User';
 
 describe('Bonus Controller', () => {
   const userId = '11111111-1111-1111-1111-111111111111';
@@ -22,10 +22,14 @@ describe('Bonus Controller', () => {
     await BonusTransaction.destroy({ where: { user_id: userId } });
   });
 
+  afterAll(async () => {
+    await sequelize.close();
+  });
+
   describe('POST /users/:id/spend', () => {
     test('первый запрос - success: true, duplicated: false', async () => {
       // Подготовка
-      await BonusTransaction.create({
+      const accrual = await BonusTransaction.create({
         id: 'a1111111-1111-1111-1111-111111111111',
         user_id: userId,
         type: 'accrual',

@@ -21,6 +21,11 @@ services:
       redis:
         condition: service_healthy
     command: sh -c "npm run migrate && npm run dev"
+    volumes:
+      - ./src:/app/src
+      - ./jest.config.cjs:/app/jest.config.cjs
+      - ./babel.config.js:/app/babel.config.js
+      - ./package.json:/app/package.json
 
   postgres:
     image: postgres:16-alpine
@@ -30,7 +35,6 @@ services:
       POSTGRES_DB: appdb
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
-     
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/seed.sql:/docker-entrypoint-initdb.d/01-seed.sql:ro

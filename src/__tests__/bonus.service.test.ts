@@ -1,17 +1,17 @@
-const { sequelize } = require('../models'); // путь может отличаться
-const { BonusTransaction } = require('../models/BonusTransaction');
-const { User } = require('../models/User');
-const { spendBonus, getUserBalance } = require('../services/bonus.service');
-const { ConflictError, InsufficientBalanceError, ValidationError } = require('../services/bonus.service');
+import { sequelize } from '../db';
+import { BonusTransaction } from '../models/BonusTransaction';
+import { User } from '../models/User';
+import { spendBonus, getUserBalance } from '../services/bonus.service';
+import { ConflictError, InsufficientBalanceError, ValidationError } from '../services/bonus.service';
 
 describe('Bonus Service', () => {
   const userId = '11111111-1111-1111-1111-111111111111';
-  
+
   beforeAll(async () => {
     await sequelize.authenticate();
     await BonusTransaction.destroy({ where: {} });
     await User.destroy({ where: {} });
-    
+
     await User.create({
       id: userId,
       name: 'Test User'
@@ -19,10 +19,10 @@ describe('Bonus Service', () => {
   });
 
   beforeEach(async () => {
-    await BonusTransaction.destroy({ 
-      where: { 
-        user_id: userId 
-      } 
+    await BonusTransaction.destroy({
+      where: {
+        user_id: userId
+      }
     });
   });
 
@@ -30,7 +30,7 @@ describe('Bonus Service', () => {
     await sequelize.close();
   });
 
-  // ===== ТЕСТ 1: Идемпотентность =====
+  // Идемпотентность
   describe('Idempotency', () => {
     test('повторный запрос с тем же requestId не создает второе списание', async () => {
       // Подготовка
@@ -45,7 +45,7 @@ describe('Bonus Service', () => {
 
       // Действие - первый запрос
       const result1 = await spendBonus(userId, 'test-key-1', 50);
-      
+
       // Действие - второй запрос (повторный)
       const result2 = await spendBonus(userId, 'test-key-1', 50);
 
@@ -116,7 +116,7 @@ describe('Bonus Service', () => {
     });
   });
 
-  // ===== ТЕСТ 3: Конкурентные списания =====
+  // Конкурентные списания
   describe('Concurrent spend', () => {
     test('конкурентные списания не приводят к отрицательному балансу', async () => {
       // Подготовка
@@ -140,7 +140,7 @@ describe('Bonus Service', () => {
 
       // Проверка
       // Только одно должно успешно выполниться
-      const successful = results.filter(r => r && r.success === true);
+      const successful = results.filter(r => r && typeof r === 'object' && 'success' in r && r.success === true);
       const errors = results.filter(r => r instanceof InsufficientBalanceError);
 
       expect(successful.length).toBe(1);
@@ -152,7 +152,7 @@ describe('Bonus Service', () => {
     });
   });
 
-  // ===== ТЕСТ 4: Валидация =====
+  // Валидация 
   describe('Validation', () => {
     test('невалидные входные данные возвращают 400', async () => {
       // Без requestId
